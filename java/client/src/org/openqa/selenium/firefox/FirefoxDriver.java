@@ -17,6 +17,7 @@
 
 package org.openqa.selenium.firefox;
 
+import static org.openqa.selenium.firefox.FirefoxDriver.SystemProperty.BROWSER_LOGFILE;
 import static org.openqa.selenium.firefox.FirefoxOptions.FIREFOX_OPTIONS;
 import static org.openqa.selenium.remote.CapabilityType.PROXY;
 
@@ -25,29 +26,20 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import org.openqa.selenium.Capabilities;
-import org.openqa.selenium.NoSuchSessionException;
 import org.openqa.selenium.Proxy;
 import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.firefox.internal.NewProfileExtensionConnection;
-import org.openqa.selenium.internal.Killable;
-import org.openqa.selenium.internal.Lock;
-import org.openqa.selenium.internal.SocketLock;
-import org.openqa.selenium.logging.LocalLogs;
-import org.openqa.selenium.logging.NeedsLocalLogs;
 import org.openqa.selenium.remote.BeanToJsonConverter;
-import org.openqa.selenium.remote.Command;
 import org.openqa.selenium.remote.CommandExecutor;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.DriverCommand;
 import org.openqa.selenium.remote.FileDetector;
 import org.openqa.selenium.remote.RemoteWebDriver;
-import org.openqa.selenium.remote.Response;
 import org.openqa.selenium.remote.service.DriverCommandExecutor;
+import org.openqa.selenium.remote.service.DriverService;
 
+import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -64,7 +56,7 @@ import java.util.logging.Logger;
  *WebDriver driver = new FirefoxDriver(options);
  * </pre>
  */
-public class FirefoxDriver extends RemoteWebDriver implements Killable {
+public class FirefoxDriver extends RemoteWebDriver {
 
   public static final class SystemProperty {
 
@@ -234,17 +226,22 @@ public class FirefoxDriver extends RemoteWebDriver implements Killable {
   }
 
   private static CommandExecutor toExecutor(FirefoxOptions options) {
-    if (options.isLegacy()) {
-      return new FirefoxDriver.LazyCommandExecutor(options.getBinary(), options.getProfile());
+    DriverService.Builder builder;
 
+    if (options.isLegacy()) {
+      builder = XpiDriverService.builder()
+          .withBinary(options.getBinaryOrNull().orElseGet(FirefoxBinary::new))
+          .withProfile(options.getProfile());
     } else {
-      GeckoDriverService.Builder builder = new GeckoDriverService.Builder().usingPort(0);
-      Optional<FirefoxBinary> binary = options.getBinaryOrNull();
-      if (binary.isPresent()) {
-        builder.usingFirefoxBinary(binary.get());
-      }
-      return new DriverCommandExecutor(builder.build());
+      builder = new GeckoDriverService.Builder()
+          .usingFirefoxBinary(options.getBinaryOrNull().orElseGet(FirefoxBinary::new));
     }
+
+    if (System.getProperty(BROWSER_LOGFILE) != null) {
+      builder.withLogFile(new File(System.getProperty(System.getProperty(BROWSER_LOGFILE))));
+    }
+
+    return new DriverCommandExecutor(builder.build());
   }
 
   private static FirefoxOptions getFirefoxOptions(Capabilities capabilities) {
@@ -295,16 +292,6 @@ public class FirefoxDriver extends RemoteWebDriver implements Killable {
         "via RemoteWebDriver");
   }
 
-  /**
-   * Attempt to forcibly kill this Killable at the OS level. Useful where the extension has
-   * stopped responding, and you don't want to leak resources. Should not ordinarily be called.
-   */
-  public void kill() {
-    if (this.getCommandExecutor() instanceof LazyCommandExecutor) {
-      ((LazyCommandExecutor) this.getCommandExecutor()).binary.quit();
-    }
-  }
-
   @Override
   public Options manage() {
     return new RemoteWebDriverOptions() {
@@ -346,46 +333,6 @@ public class FirefoxDriver extends RemoteWebDriver implements Killable {
     return Boolean.valueOf(useMarionette);
   }
 
-  @Override
-  protected void startClient(Capabilities desiredCapabilities, Capabilities requiredCapabilities) {
-    if (isLegacy(desiredCapabilities)) {
-      LazyCommandExecutor exe = (LazyCommandExecutor) getCommandExecutor();
-
-      // TODO(simon): Make this not sinfully ugly
-      ExtensionConnection connection = connectTo(exe.binary, exe.profile, "localhost");
-      exe.setConnection(connection);
-
-      try {
-        connection.start();
-      } catch (IOException e) {
-        throw new WebDriverException("An error occurred while connecting to Firefox", e);
-      }
-
-    }
-  }
-
-  protected ExtensionConnection connectTo(FirefoxBinary binary, FirefoxProfile profile,
-      String host) {
-    Lock lock = obtainLock(profile);
-    try {
-      FirefoxBinary bin = binary == null ? new FirefoxBinary() : binary;
-      return new NewProfileExtensionConnection(lock, bin, profile, host);
-    } catch (Exception e) {
-      throw new WebDriverException(e);
-    }
-  }
-
-  protected Lock obtainLock(FirefoxProfile profile) {
-    return new SocketLock();
-  }
-
-  @Override
-  protected void stopClient() {
-    if (this.getCommandExecutor() instanceof LazyCommandExecutor) {
-      ((LazyCommandExecutor) this.getCommandExecutor()).quit();
-    }
-  }
-
   /**
    * Drops capabilities that we shouldn't send over the wire.
    *
@@ -414,54 +361,5 @@ public class FirefoxDriver extends RemoteWebDriver implements Killable {
     }
 
     return caps;
-  }
-
-  public static class LazyCommandExecutor implements CommandExecutor, NeedsLocalLogs {
-    private ExtensionConnection connection;
-    private final FirefoxBinary binary;
-    private final FirefoxProfile profile;
-    private LocalLogs logs = LocalLogs.getNullLogger();
-
-    LazyCommandExecutor(FirefoxBinary binary, FirefoxProfile profile) {
-      this.binary = binary;
-      this.profile = profile;
-    }
-
-    public void setConnection(ExtensionConnection connection) {
-      this.connection = connection;
-      connection.setLocalLogs(logs);
-    }
-
-    public void quit() {
-      if (connection != null) {
-        connection.quit();
-        connection = null;
-      }
-      if (profile != null) {
-        profile.cleanTemporaryModel();
-      }
-    }
-
-    public Response execute(Command command) throws IOException {
-      if (connection == null) {
-        if (command.getName().equals(DriverCommand.QUIT)) {
-          return new Response();
-        }
-        throw new NoSuchSessionException(
-            "The FirefoxDriver cannot be used after quit() was called.");
-      }
-      return connection.execute(command);
-    }
-
-    public void setLocalLogs(LocalLogs logs) {
-      this.logs = logs;
-      if (connection != null) {
-        connection.setLocalLogs(logs);
-      }
-    }
-
-    public URI getAddressOfRemoteServer() {
-      return connection.getAddressOfRemoteServer();
-    }
   }
 }
