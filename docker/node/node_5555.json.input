@@ -1,0 +1,31 @@
+{
+  "capabilities": [
+    {
+      "seleniumProtocol": "WebDriver",
+      "browserName": "firefox",
+      "maxInstances": 3,
+      "version": "",
+      "platform": "LINUX",
+      "password": "secret!"
+    },
+    {
+      "seleniumProtocol": "WebDriver",
+      "browserName": "chrome",
+      "maxInstances": 3,
+      "version": "",
+      "platform": "LINUX",
+      "password": "secret!"
+    }
+  ],
+  "loadedFromFile": "node_5555.json",
+  "proxy": "com.setitcredit.SetItCreditProxy",
+  "maxSession": 3,
+  "port": 5555,
+  "register": true,
+  "unregisterIfStillDownAfter": 10000,
+  "hubPort": 4444,
+  "hubHost": "XXHUBHOSTXX",
+  "registerCycle": 5000,
+  "nodeStatusCheckTimeout": 10000,
+  "downPollingLimit": 0
+}

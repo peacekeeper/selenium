@@ -19,7 +19,6 @@ package org.openqa.grid.selenium;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-
 import com.beust.jcommander.JCommander;
 
 import org.openqa.grid.common.GridRole;
@@ -72,6 +71,7 @@ public class GridLauncherV3 {
   private static ImmutableMap<String, Supplier<GridItemLauncher>> LAUNCHERS = buildLaunchers();
 
   public static void main(String[] args) throws Exception {
+	org.openqa.grid.selenium.PrivacyLogger.configurePrivacyLogger();
     GridItemLauncher launcher = buildLauncher(args);
     if (launcher == null) {
       return;
@@ -90,6 +90,7 @@ public class GridLauncherV3 {
     }
 
     configureLogging(launcher.configuration);
+	org.openqa.grid.selenium.PrivacyLogger.configurePrivacyLogger();
 
     log.info(String.format(
       "Selenium build info: version: '%s', revision: '%s'",
@@ -101,6 +102,7 @@ public class GridLauncherV3 {
       launcher.printUsage();
       e.printStackTrace();
     }
+	org.openqa.grid.selenium.PrivacyLogger.configurePrivacyLogger();
   }
 
   /**
