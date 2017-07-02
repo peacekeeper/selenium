@@ -12,21 +12,20 @@ import java.util.Properties;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-/*
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-*/
+
 public class GridStatusUpdate {
-/*
-	private static Logger logger = Logger.getLogger(GridStatusUpdate.class);
+
+	private static java.util.logging.Logger logger = java.util.logging.Logger.getLogger(GridStatusUpdate.class.getName());
 
 	public static String urlBase = "https://scserviceapi-dev.setitcredit.com/SetitCreditApplicationService.svc/grid/";
 
@@ -172,8 +171,9 @@ public class GridStatusUpdate {
 		if (response.getStatusLine().getStatusCode() != 200) throw new IOException("Update unsuccessful: " + url + " --> " + response.getStatusLine().getStatusCode() + " (" + response.getStatusLine().getReasonPhrase() + ")");
 
 		String responseline = new BufferedReader(new InputStreamReader(response.getEntity().getContent())).readLine();
+		logger.info("Response from Status update API: " + responseline);
 		JsonObject j = gson.fromJson(responseline, JsonObject.class);
 		int HttpCode = j.get("HttpCode").getAsInt();
 		if (HttpCode != 200) throw new IOException("Update unsuccessful: " + responseline);
 	}
-*/}
+}
