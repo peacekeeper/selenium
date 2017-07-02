@@ -1,0 +1,9 @@
+# Dockerfile
+
+FROM selenium/node-chrome:latest
+
+MAINTAINER  Author Name <author@email.com>
+
+ADD build/dist/selenium-server-standalone-3.4.0.jar /opt/selenium/selenium-server-standalone.jar
+
+USER seluser
