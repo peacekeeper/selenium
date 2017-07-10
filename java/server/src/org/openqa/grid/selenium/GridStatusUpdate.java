@@ -48,7 +48,7 @@ public class GridStatusUpdate {
 			properties.load(new FileReader(new File("statusupdate.properties")));
 		} catch (Exception ex) {
 
-			ex.printStackTrace(System.err);
+			logger.info("No statusupdate.properties file... Using environment variables.");
 		}
 	}
 
@@ -137,16 +137,20 @@ public class GridStatusUpdate {
 			int status, 
 			String capabilities) throws IOException {
 
-		if (envGridUuid() == null) return;
-
 		logger.info("Status update " + status + ": " + capabilities);
 
-		String url = urlBase + envGridUuid();
+		String uuid = envGridUuid();
 		String name = envGridName();
 		String location = envGridLocation();
 		String authId = envAuthId();
 		String authKey = envAuthKey();
 
+		String url = urlBase + envGridUuid();
+
+		if (uuid == null) { logger.warning("No 'uuid' set. Not calling status update service."); return; }
+		if (authId == null) { logger.warning("No 'authid' set. Not calling status update service."); return; }
+		if (authKey == null) { logger.warning("No 'autkey' set. Not calling status update service."); return; }
+		
 		HttpClientBuilder builder = HttpClientBuilder.create();
 		builder.setHostnameVerifier(new AllowAllHostnameVerifier());
 		HttpClient httpClient = builder.build();
@@ -166,6 +170,7 @@ public class GridStatusUpdate {
 		httpPut.setHeader("Content-Type", "application/json");
 		httpPut.setHeader("Authorization", authorization);
 		httpPut.setEntity(new StringEntity(body));
+		logger.info("Request to Status update API " + url + ": " + body);
 
 		HttpResponse response = httpClient.execute(httpPut);
 		if (response.getStatusLine().getStatusCode() != 200) throw new IOException("Update unsuccessful: " + url + " --> " + response.getStatusLine().getStatusCode() + " (" + response.getStatusLine().getReasonPhrase() + ")");

@@ -71,7 +71,6 @@ public class GridLauncherV3 {
   private static ImmutableMap<String, Supplier<GridItemLauncher>> LAUNCHERS = buildLaunchers();
 
   public static void main(String[] args) throws Exception {
-	org.openqa.grid.selenium.PrivacyLogger.configurePrivacyLogger();
     GridItemLauncher launcher = buildLauncher(args);
     if (launcher == null) {
       return;
@@ -90,7 +89,6 @@ public class GridLauncherV3 {
     }
 
     configureLogging(launcher.configuration);
-	org.openqa.grid.selenium.PrivacyLogger.configurePrivacyLogger();
 
     log.info(String.format(
       "Selenium build info: version: '%s', revision: '%s'",
@@ -102,7 +100,9 @@ public class GridLauncherV3 {
       launcher.printUsage();
       e.printStackTrace();
     }
-	org.openqa.grid.selenium.PrivacyLogger.configurePrivacyLogger();
+
+    org.openqa.grid.selenium.PrivacyLogger.configurePrivacyLogger();
+	GridStatusUpdate.update(GridStatusUpdate.STATUS_INITIALIZING, "unknown");
   }
 
   /**
