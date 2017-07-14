@@ -1,0 +1,8 @@
+filebeat.prospectors:
+- input_type: log
+  paths:
+    - /opt/selenium/hub.log
+
+output.logstash:
+  hosts: ["52.91.248.123:5044"]
+

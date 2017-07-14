@@ -8,10 +8,12 @@ ADD build/dist/selenium-server-standalone-3.4.0.jar /opt/selenium/selenium-serve
 
 RUN sudo apt-get -y update
 
-RUN sudo apt-get install -y --no-install-recommends nginx && \
+RUN sudo apt-get install -y --no-install-recommends nginx curl && \
     sudo apt-get clean
 
 RUN sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# nginx
 
 ADD docker/hub/wildcard_setitcredit_net.pem /etc/nginx/
 ADD docker/hub/wildcard_setitcredit_net.cert.pem /etc/nginx/
@@ -20,6 +22,20 @@ ADD docker/hub/nginx-hub /etc/nginx/sites-available/
 RUN sudo ln -s /etc/nginx/sites-available/nginx-hub /etc/nginx/sites-enabled/nginx-hub
 RUN sudo openssl dhparam -out /etc/nginx/dhparams.pem 2048
 RUN sudo sed -i '7i sudo service nginx start' /opt/bin/entry_point.sh
+
+# filebeat
+
+RUN sudo curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-5.5.0-amd64.deb
+RUN sudo dpkg -i filebeat-5.5.0-amd64.deb
+RUN sudo sed -i '8i sudo service filebeat start' /opt/bin/entry_point.sh
+
+ADD docker/hub/filebeat.yml /etc/filebeat/
+
+# selenium
+
+RUN sudo sed -i '9i export SE_OPTS="-log /opt/selenium/hub.log"' /opt/bin/entry_point.sh
+
+# done
 
 EXPOSE 4445
 
