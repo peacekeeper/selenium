@@ -4,5 +4,5 @@ filebeat.prospectors:
     - /opt/selenium/hub.log
 
 output.logstash:
-  hosts: ["52.91.248.123:5044"]
+  hosts: ["172.31.64.97:5044"]
 
