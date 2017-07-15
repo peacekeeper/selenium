@@ -17,10 +17,20 @@
 
 package org.openqa.grid.internal;
 
-import com.google.common.base.Predicate;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import net.jcip.annotations.ThreadSafe;
-
+import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.listeners.RegistrationListener;
 import org.openqa.grid.internal.listeners.SelfHealingProxy;
 import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
@@ -30,14 +40,9 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.internal.HttpClientFactory;
 import org.openqa.selenium.remote.server.log.LoggingManager;
 
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import com.google.common.base.Predicate;
+
+import net.jcip.annotations.ThreadSafe;
 
 /**
  * Kernel of the grid. Keeps track of what's happening, what's free/used and assigned resources to
@@ -301,6 +306,8 @@ public class Registry {
                 " but couldn't find it.");
   }
 
+	private static java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Registry.class.getName());
+  
   /**
    * Add a proxy to the list of proxy available for the grid to managed and link the proxy to the
    * registry.
@@ -311,6 +318,26 @@ public class Registry {
     if (proxy == null) {
       return;
     }
+
+
+	try {
+
+		List<DesiredCapabilities> capabilities = proxy.getConfig().capabilities;
+		capabilities.remove("password");
+
+		String capabilitiesString = "" + capabilities;
+		logger.info("Status update: " + GridStatusUpdate.STATUS_READY + " " + capabilitiesString);
+		GridStatusUpdate.update(GridStatusUpdate.STATUS_READY, capabilitiesString);
+	} catch (Throwable ex) {
+
+		System.err.println(ex.getMessage());
+		ex.printStackTrace(System.err);
+		logger.severe("Unable to send status update: " + ex.getLocalizedMessage());
+		throw new RuntimeException("Unable to send status update: " + ex.getMessage(), ex);
+	}
+
+    
+    
     LOG.info("Registered a node " + proxy);
     try {
       lock.lock();

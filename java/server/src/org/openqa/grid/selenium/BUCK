@@ -38,6 +38,7 @@ java_library(name = 'classes',
     '//third_party/java/guava:guava',
     '//third_party/java/servlet:servlet-api',
     '//third_party/java/beust:jcommander',
+    '//third_party/java/java-dogstatsd-client:java-dogstatsd-client',
   ],
   visibility = [
     '//java/server/test/org/openqa/grid/e2e:tests',

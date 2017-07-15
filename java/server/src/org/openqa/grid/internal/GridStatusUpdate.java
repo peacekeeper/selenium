@@ -1,4 +1,4 @@
-package org.openqa.grid.selenium;
+package org.openqa.grid.internal;
 
 import java.io.BufferedReader;
 import java.io.File;

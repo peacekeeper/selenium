@@ -1,0 +1,8 @@
+prebuilt_jar(
+  name = 'java-dogstatsd-client',
+  maven_coords = 'com.datadoghq:java-dogstatsd-client:jar:2.3',
+  binary_jar = 'java-dogstatsd-client-2.3.jar',
+  visibility = [
+    'PUBLIC',
+  ],
+)

@@ -1,58 +1,31 @@
 package org.openqa.grid.selenium;
 
-/*import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.log4j.Logger;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.common.exception.RemoteException;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
-import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 
-import com.groupon.seleniumgridextras.grid.proxies.SetupTeardownProxy;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.ServiceCheck;
-import com.timgroup.statsd.StatsDClient;*/
+import com.timgroup.statsd.StatsDClient;
 
-public class SetItCreditProxy /*extends SetupTeardownProxy */{
+public class SetItCreditProxy extends DefaultRemoteProxy {
 
-/*    private static Logger logger = Logger.getLogger(SetItCreditProxy.class);
+	private static java.util.logging.Logger logger = java.util.logging.Logger.getLogger(SetItCreditProxy.class.getName());
 
 	private final StatsDClient statsd;
 
 	public SetItCreditProxy(RegistrationRequest request, Registry registry) {
 
 		super(request, registry);
-
-		try {
-
-			Method getConfigurationMethod = RegistrationRequest.class.getMethod("getConfiguration", new Class<?> [0]);
-			Object configuration = (Object) getConfigurationMethod.invoke(request, new Object [0]);
-
-			Field capabilitiesField = configuration.getClass().getField("capabilities");
-			List<?> capabilitiesList = (List<?>) capabilitiesField.get(configuration);
-			Map<String, Object> capabilities = new HashMap<String, Object> (((Map<String, ?>) ((DesiredCapabilities) capabilitiesList.get(0)).asMap()));
-			capabilities.remove("password");
-
-			String capabilitiesString = "" + capabilities;
-			logger.info("Status update: " + GridStatusUpdate.STATUS_READY + " " + capabilitiesString);
-			GridStatusUpdate.update(GridStatusUpdate.STATUS_READY, capabilitiesString);
-		} catch (Throwable ex) {
-
-			System.err.println(ex.getMessage());
-			ex.printStackTrace(System.err);
-			logger.error("Unable to send status update: " + ex.getLocalizedMessage(), ex);
-			throw new RuntimeException("Unable to send status update: " + ex.getMessage(), ex);
-		}
 
 		String[] tags = new String[] { "registry-hub:" + registry.getHub().getUrl() };
 		this.statsd = new NonBlockingStatsDClient(
@@ -152,7 +125,7 @@ public class SetItCreditProxy /*extends SetupTeardownProxy */{
 
 
 
-*/
+
 	/*		statsd.incrementCounter("foo");
 	statsd.recordGaugeValue("bar", 100);
 	statsd.recordGaugeValue("baz", 0.01);
