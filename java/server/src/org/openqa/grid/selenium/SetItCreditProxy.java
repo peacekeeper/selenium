@@ -1,6 +1,5 @@
 package org.openqa.grid.selenium;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -13,7 +12,6 @@ import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 
-import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.ServiceCheck;
 import com.timgroup.statsd.StatsDClient;
 
@@ -21,20 +19,13 @@ public class SetItCreditProxy extends DefaultRemoteProxy {
 
 	private static java.util.logging.Logger logger = java.util.logging.Logger.getLogger(SetItCreditProxy.class.getName());
 
-	private final StatsDClient statsd;
-
+	private StatsDClient statsd;
+	
 	public SetItCreditProxy(RegistrationRequest request, Registry registry) {
 
 		super(request, registry);
 
-		String[] tags = new String[] { "registry-hub:" + registry.getHub().getUrl() };
-		this.statsd = new NonBlockingStatsDClient(
-				this.getClass().getName(),
-				"localhost",
-				8125,
-				tags);
-
-		logger.info("SetItCreditProxy:" + Arrays.asList(tags));
+		statsd = DatadogAgent.get(registry);
 	}
 
 	@Override
@@ -59,13 +50,12 @@ public class SetItCreditProxy extends DefaultRemoteProxy {
 		String[] tags = new String[] { "session:" + session.getInternalKey(), "jobuuid:" + session.getRequestedCapabilities().get("jobuuid") };
 		statsd.recordExecutionTime("session", endTime.getTime() - startTime.getTime(), tags);
 
-		ServiceCheck sc = ServiceCheck
-				.builder()
-				.withName("com.setitcredit.SetItCreditProxy")
+		ServiceCheck sc = DatadogAgent.serviceCheckBuilder()
 				.withStatus(ServiceCheck.Status.OK)
 				.withTags(tags)
 				.build();
 		statsd.serviceCheck(sc);
+		logger.info("Service check: " + sc.getMessage());
 
 		super.afterSession(session);
 	}
@@ -92,13 +82,12 @@ public class SetItCreditProxy extends DefaultRemoteProxy {
 		String[] tags = new String[] { "command:" + request.getMethod() + "-" + request.getPathInfo(), "jobuuid:" + session.getRequestedCapabilities().get("jobuuid") };
 		statsd.recordExecutionTime("command", endTime.getTime() - startTime.getTime(), tags);
 
-		ServiceCheck sc = ServiceCheck
-				.builder()
-				.withName("com.setitcredit.SetItCreditProxy")
+		ServiceCheck sc = DatadogAgent.serviceCheckBuilder()
 				.withStatus(ServiceCheck.Status.OK)
 				.withTags(tags)
 				.build();
 		statsd.serviceCheck(sc);
+		logger.info("Service check: " + sc.getMessage());
 
 		super.afterCommand(session, request, response);
 	}
@@ -110,13 +99,12 @@ public class SetItCreditProxy extends DefaultRemoteProxy {
 
 		String[] tags = new String[] { "exception:" + lastInserted.getClass().getSimpleName(), "message:" + lastInserted.getMessage() };
 
-		ServiceCheck sc = ServiceCheck
-				.builder()
-				.withName("com.setitcredit.SetItCreditProxy")
+		ServiceCheck sc = DatadogAgent.serviceCheckBuilder()
 				.withStatus(ServiceCheck.Status.CRITICAL)
 				.withTags(tags)
 				.build();
 		statsd.serviceCheck(sc);
+		logger.info("Service check: " + sc.getMessage());
 
 		super.onEvent(events, lastInserted);
 	}
@@ -132,12 +120,11 @@ public class SetItCreditProxy extends DefaultRemoteProxy {
 	statsd.recordHistogramValue("qux", 15);
 	statsd.recordHistogramValue("qux", 15.5);
 
-	ServiceCheck sc = ServiceCheck
-			.builder()
-			.withName("my.check.name")
+		ServiceCheck sc = DatadogAgent.serviceCheckBuilder()
 			.withStatus(ServiceCheck.Status.OK)
 			.build();
 	statsd.serviceCheck(sc);
+	logger.info("Service check: " + sc.getMessage());
 
 	statsd.recordExecutionTime("bag", 25, "cluster:foo");*/
 

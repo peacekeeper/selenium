@@ -17,11 +17,7 @@
 
 package org.openqa.grid.internal;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -30,10 +26,10 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.listeners.RegistrationListener;
 import org.openqa.grid.internal.listeners.SelfHealingProxy;
 import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
+import org.openqa.grid.selenium.DatadogAgent;
 import org.openqa.grid.web.Hub;
 import org.openqa.grid.web.servlet.handler.RequestHandler;
 import org.openqa.selenium.remote.DesiredCapabilities;
@@ -41,6 +37,7 @@ import org.openqa.selenium.remote.internal.HttpClientFactory;
 import org.openqa.selenium.remote.server.log.LoggingManager;
 
 import com.google.common.base.Predicate;
+import com.timgroup.statsd.ServiceCheck;
 
 import net.jcip.annotations.ThreadSafe;
 
@@ -319,13 +316,16 @@ public class Registry {
       return;
     }
 
+    // status update
+
+	List<DesiredCapabilities> capabilities = proxy.getConfig().capabilities;
+	capabilities.remove("password");
+	String capabilitiesString = "" + capabilities;
+	String idString = proxy.getId();
+	String statusString = proxy.getStatus().toString();
 
 	try {
 
-		List<DesiredCapabilities> capabilities = proxy.getConfig().capabilities;
-		capabilities.remove("password");
-
-		String capabilitiesString = "" + capabilities;
 		logger.info("Status update: " + GridStatusUpdate.STATUS_READY + " " + capabilitiesString);
 		GridStatusUpdate.update(GridStatusUpdate.STATUS_READY, capabilitiesString);
 	} catch (Throwable ex) {
@@ -336,6 +336,15 @@ public class Registry {
 		throw new RuntimeException("Unable to send status update: " + ex.getMessage(), ex);
 	}
 
+	// service check
+
+	String[] tags = new String[] { "node-capabilities:" + capabilitiesString, "node-id:" + idString, "node-status:" + statusString };
+	ServiceCheck sc = DatadogAgent.serviceCheckBuilder()
+			.withStatus(ServiceCheck.Status.OK)
+			.withTags(tags)
+			.build();
+	DatadogAgent.get(this).serviceCheck(sc);
+	logger.info("Service check: " + sc.getMessage());
     
     
     LOG.info("Registered a node " + proxy);

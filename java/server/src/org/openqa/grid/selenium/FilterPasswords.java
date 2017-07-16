@@ -1,11 +1,8 @@
 package org.openqa.grid.selenium;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 public class FilterPasswords implements LogFilter {
 
-	private static final Pattern PATTERN = Pattern.compile(
+	/*	private static final Pattern PATTERN = Pattern.compile(
 			"^(.*password=)" +
 			"([^,]+)" +
 			"(, .*)$");
@@ -17,5 +14,16 @@ public class FilterPasswords implements LogFilter {
 		if (! matcher.matches()) return text;
 
 		return matcher.group(1) + "**OMITTED: PASSWORD**" + matcher.group(3);
+	}*/
+
+	@Override
+	public String filter(String text) {
+
+		if (text.toLowerCase().contains("password") &&
+				(! text.toLowerCase().contains("jobuuid")) &&
+				(! text.toLowerCase().contains("capabilities")))
+			return "**OMITTED: PASSWORD**";
+
+		return text;
 	}
 }

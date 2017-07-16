@@ -4,14 +4,10 @@ FROM selenium/hub:latest
 
 MAINTAINER  Author Name <author@email.com>
 
-ADD build/dist/selenium-server-standalone-3.4.0.jar /opt/selenium/selenium-server-standalone.jar
-
 RUN sudo apt-get -y update
 
 RUN sudo apt-get install -y --no-install-recommends nginx curl && \
     sudo apt-get clean
-
-RUN sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # nginx
 
@@ -31,11 +27,30 @@ RUN sudo sed -i '8i sudo service filebeat start' /opt/bin/entry_point.sh
 
 ADD docker/hub/filebeat.yml /etc/filebeat/
 
+# datadog agent
+
+RUN sudo apt-get update
+RUN sudo apt-get install apt-transport-https
+
+RUN sudo sh -c "echo 'deb https://apt.datadoghq.com/ stable main' > /etc/apt/sources.list.d/datadog.list"
+RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys C7A7DA52
+
+RUN sudo apt-get update
+RUN sudo apt-get install datadog-agent
+
+RUN sudo sh -c "sed 's/api_key:.*/api_key: 419e02815d44815d75e18edcab9d0833/' /etc/dd-agent/datadog.conf.example > /etc/dd-agent/datadog.conf"
+
+RUN sudo sed -i '9i sudo service datadog-agent start' /opt/bin/entry_point.sh
+
 # selenium
 
-RUN sudo sed -i '9i export SE_OPTS="-log /opt/selenium/hub.log"' /opt/bin/entry_point.sh
+ADD build/dist/selenium-server-standalone-3.4.0.jar /opt/selenium/selenium-server-standalone.jar
+
+RUN sudo sed -i '10i export SE_OPTS="-log /opt/selenium/hub.log"' /opt/bin/entry_point.sh
 
 # done
+
+RUN sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 EXPOSE 4445
 

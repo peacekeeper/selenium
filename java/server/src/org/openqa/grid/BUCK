@@ -27,6 +27,7 @@ java_library(name = 'grid',
     '//third_party/java/jetty:jetty',
     '//third_party/java/servlet:servlet-api',
     '//third_party/java/yaml:snakeyaml',
+    '//third_party/java/java-dogstatsd-client:java-dogstatsd-client',
   ],
   visibility = [
     '//java/server/src/org/openqa/selenium/remote/server:standalone-server-lib',

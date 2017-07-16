@@ -4,6 +4,16 @@ FROM selenium/node-chrome:latest
 
 MAINTAINER  Author Name <author@email.com>
 
+# selenium
+
 ADD build/dist/selenium-server-standalone-3.4.0.jar /opt/selenium/selenium-server-standalone.jar
+
+RUN sudo sed -i '7i export SE_OPTS="-log /opt/selenium/node.log"' /opt/bin/entry_point.sh
+
+# done
+
+RUN sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+EXPOSE 5555
 
 USER seluser
