@@ -319,15 +319,20 @@ public class Registry {
     // status update
 
 	List<DesiredCapabilities> capabilities = proxy.getConfig().capabilities;
-	capabilities.remove("password");
-	String capabilitiesString = "" + capabilities;
+	String browserName = capabilities.get(0) != null ? capabilities.get(0).getBrowserName() : null;
+	String platform = capabilities.get(0) != null ? ("" + capabilities.get(0).getPlatform()) : null;
+	StringBuffer capabilitiesString = new StringBuffer();
+	if (browserName != null) capabilitiesString.append("browserName," + browserName);
+	if (browserName != null && platform != null) capabilitiesString.append(";");
+	if (platform != null) capabilitiesString.append("platform," + platform);
+	
 	String idString = proxy.getId();
 	String statusString = proxy.getStatus().toString();
 
 	try {
 
 		logger.info("Status update: " + GridStatusUpdate.STATUS_READY + " " + capabilitiesString);
-		GridStatusUpdate.update(GridStatusUpdate.STATUS_READY, capabilitiesString);
+		GridStatusUpdate.update(GridStatusUpdate.STATUS_READY, capabilitiesString.toString());
 	} catch (Throwable ex) {
 
 		System.err.println(ex.getMessage());
