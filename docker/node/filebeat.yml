@@ -1,7 +1,7 @@
 filebeat.prospectors:
 - input_type: log
   paths:
-    - /opt/selenium/hub.log
+    - /opt/selenium/node.log
 
 output.logstash:
   hosts: ["ip-172-31-64-97.ec2.internal:5044"]

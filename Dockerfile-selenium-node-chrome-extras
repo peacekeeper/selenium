@@ -4,11 +4,24 @@ FROM selenium/node-chrome:latest
 
 MAINTAINER  Author Name <author@email.com>
 
+RUN sudo apt-get -y update
+
+RUN sudo apt-get install -y --no-install-recommends  curl && \
+    sudo apt-get clean
+
+# filebeat
+
+RUN sudo curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-5.5.0-amd64.deb
+RUN sudo dpkg -i filebeat-5.5.0-amd64.deb
+RUN sudo sed -i '7i sudo service filebeat start' /opt/bin/entry_point.sh
+
+ADD docker/node/filebeat.yml /etc/filebeat/
+
 # selenium
 
 ADD build/dist/selenium-server-standalone-3.4.0.jar /opt/selenium/selenium-server-standalone.jar
 
-RUN sudo sed -i '7i export SE_OPTS="-log /opt/selenium/node.log"' /opt/bin/entry_point.sh
+RUN sudo sed -i '8i export SE_OPTS="-log /opt/selenium/node.log"' /opt/bin/entry_point.sh
 
 # done
 
